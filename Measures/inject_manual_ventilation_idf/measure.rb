@@ -1,10 +1,7 @@
 # frozen_string_literal: true
 
-require_relative "resources/manual_ventilation_output"
-
 # start the measure
 class InjectManualVentilationIDF < OpenStudio::Measure::EnergyPlusMeasure
-  include ManualVentilationOutput
   # human readable name
   def name
     return "InjectManualVentilationIDF"
@@ -12,12 +9,12 @@ class InjectManualVentilationIDF < OpenStudio::Measure::EnergyPlusMeasure
 
   # general description of measure
   def description
-    return "Inject manual window ventilation and report its estimated sensible heat loss and gain."
+    return "Inject manual window ventilation."
   end
 
   # description for users of what the measure does and how it works
   def modeler_description
-    return "Adds passive EMS diagnostics using the manual schedule, zone volume, local weather and BLAST/DOE2 coefficients. Reports estimated sensible heat loss and gain without changing the simulated ventilation."
+    return "Inject manual window ventilation. SetMetersIDF reports its native zone heat balance when no other zone ventilation shares the affected zones."
   end
 
   # define the arguments that the user will input
@@ -49,7 +46,7 @@ class InjectManualVentilationIDF < OpenStudio::Measure::EnergyPlusMeasure
       return false
     end
 
-    if workspace.getObjectsByType("EnergyManagementSystem:Program".to_IddObjectType).any? { |program| program.nameString == "ManualVentilationHeatOutput" }
+    if workspace.getObjectsByType("ZoneVentilation:DesignFlowRate".to_IddObjectType).any? { |object| object.nameString.end_with?(" - Manual Ventilation") }
       runner.registerError("Manual ventilation is already defined. Use one schedule with multiple ventilation periods.")
       return false
     end
@@ -112,11 +109,6 @@ class InjectManualVentilationIDF < OpenStudio::Measure::EnergyPlusMeasure
       zoneVent.setDouble(15, -100)
       zoneVent.setDouble(19, -100)
       workspace.addObject(zoneVent)
-    end
-
-    unless perimeterZones.empty?
-      add_manual_ventilation_output(workspace, perimeterZones, ventilationACH, infiltration_type)
-      runner.registerInfo("Added estimated manual ventilation sensible heat loss/gain. These diagnostic outputs do not change ventilation or represent additional HVAC demand.")
     end
 
     # report final condition of model

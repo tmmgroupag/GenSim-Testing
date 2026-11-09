@@ -1,20 +1,22 @@
 [
   {
-    "name": "Manual Ventilation Estimated Sensible Heat Loss Energy",
-    "eplus_variables": ["Manual Ventilation Estimated Sensible Heat Loss Energy"],
+    "name": "Manual Ventilation Sensible Heat Loss Energy",
+    "eplus_variables": ["Zone Ventilation Sensible Heat Loss Energy"],
     "node_reference": "",
-    "create_output_variable": true,
+    "create_output_variable": false,
     "create_custom_meter": false,
-    "create_output_meter": false,
+    "create_output_meter": true,
+    "manual_ventilation_only": true,
     "output_levels": ["Debug", "Normal", "Reduced"]
   },
   {
-    "name": "Manual Ventilation Estimated Sensible Heat Gain Energy",
-    "eplus_variables": ["Manual Ventilation Estimated Sensible Heat Gain Energy"],
+    "name": "Manual Ventilation Sensible Heat Gain Energy",
+    "eplus_variables": ["Zone Ventilation Sensible Heat Gain Energy"],
     "node_reference": "",
-    "create_output_variable": true,
+    "create_output_variable": false,
     "create_custom_meter": false,
-    "create_output_meter": false,
+    "create_output_meter": true,
+    "manual_ventilation_only": true,
     "output_levels": ["Debug", "Normal", "Reduced"]
   },
   {

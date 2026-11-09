@@ -1,90 +1,93 @@
-# Getrennter Lastgang der manuellen Fensterlüftung
+# Direkte Bilanzausgabe der manuellen Fensterlüftung
 
-Diese Erweiterung basiert auf dem lokalen GenSim-Stand `develop-2.17`,
-Commit `f292501df7ceb97d641a70889064cc2970533b24`.
+Die Ausgabe verwendet die nativen EnergyPlus-Variablen
+`Zone Ventilation Sensible Heat Loss Energy` und
+`Zone Ventilation Sensible Heat Gain Energy`. Zwei `Meter:Custom` summieren
+diese Werte ausschließlich für die von GenSim manuell belüfteten Zonen.
+Es gibt keine Nachrechnung von Luftströmen, Temperaturen oder Wärmeanteilen.
+Die vorherigen `Estimated`-Ausgaben und ihre EMS-Nachrechnung wurden entfernt.
 
-## Verwendung
+## Voraussetzung: ausschließlich manuelle Zonenlüftung
 
-Die vorhandene Measure `inject_manual_ventilation_idf` erzeugt automatisch
-zwei zusätzliche Ausgaben. Bestehende OSW-Dateien benötigen keine neuen Argumente.
-Der Workflow muss diese Reihenfolge enthalten:
+Für **alle** manuell belüfteten Zonen darf kein zusätzliches
+`ZoneVentilation:DesignFlowRate`- oder
+`ZoneVentilation:WindandStackOpenArea`-Objekt vorhanden sein.
+Auch ein ausgeschaltetes oder zeitlich getrennt betriebenes zweites Objekt
+verhindert die Zuordnung: Die Prüfung bewertet die Modellstruktur.
 
-1. `add_internal_loads`: erzeugt `ManualVentilationSchedule` aus den vier
-   `manual_vent_sched_*`-Profilen (96 Viertelstundenwerte pro Tagestyp).
-2. `inject_manual_ventilation_idf`: legt die manuelle Lüftung mit `air_changes`
-   und die zugehörigen EMS-Diagnoseobjekte an.
-3. `set_meters_idf`: fordert die zusätzlichen Ausgabevariablen an.
-4. `results`: schreibt die Zeitreihen in die vorhandenen CSV-Dateien.
+Mechanische Lüftung über HVAC-Anlagen und separat modellierte Infiltration
+werden dadurch nicht pauschal ausgeschlossen. Entscheidend ist, ob sie in
+dieselbe `Zone Ventilation`-Bilanz eingehen.
 
-In Excel muss die manuelle Fensterlüftung aktiviert sein. Bei direkter Ausführung
-einer OSW ist der Measure-Schritt selbst entscheidend; das Flag in
-`custom_export_params` allein fügt keinen Schritt hinzu.
+Die Prüfung läuft in `set_meters_idf`, nachdem die Lüftungsobjekte angelegt
+wurden. Bei Mischbetrieb in einer betroffenen Zone werden **beide manuellen
+Zähler vollständig ausgelassen** und eine Warnung mit den konkurrierenden
+Objektnamen protokolliert. Es wird weder eine Schätzung noch eine unvollständige
+Teilsumme als manueller Gebäudelastgang ausgegeben. Die sonstigen
+Simulationsergebnisse werden weiterhin erzeugt.
 
-`Test/regression/base_workflow.osw` enthält bereits die benötigten Schritte und
-ein manuelles Profil. Für die Verwendung des Forks muss dessen Measures-Ordner
-über `measure_paths` beziehungsweise den GenSim-Pfad eingebunden werden.
-Nicht die Measures des ursprünglichen Checkouts verwenden.
+ZoneList-Verweise konkurrierender Lüftungsobjekte werden aufgelöst. Nicht
+zuordenbare Verweise, AirflowNetwork und eine kombinierte Außenluftbilanz mit
+`Quadrature` in den betroffenen Zonen führen ebenfalls zum Auslassen.
+Manuelle Objekte werden am GenSim-Namenssuffix ` - Manual Ventilation` und
+am Zeitplan `ManualVentilationSchedule` erkannt; sie müssen direkt auf Zonen
+verweisen. Individuell umbenannte oder anders erzeugte Objekte werden nicht
+automatisch als manuelle Lüftung erkannt.
 
-## Ausgaben und Einheiten
+## Workflow einstellen
 
-In den Ausgabeebenen `Normal`, `Debug` und `Reduced` werden ergänzt:
+In Excel die manuelle Fensterlüftung aktivieren und die zusätzliche
+temperaturgesteuerte Fensterlüftung deaktivieren. Anschließend neu exportieren.
 
-- `Manual Ventilation Estimated Sensible Heat Loss Energy[Wh]`
-- `Manual Ventilation Estimated Sensible Heat Gain Energy[Wh]`
+Bei direkter Bearbeitung einer OSW:
 
-Beide Werte sind positiv und über die von der Measure erfassten Zonen summiert.
-EnergyPlus liefert Joule; die vorhandene Results-Measure wandelt diese in Wh
-pro Ausgabeintervall um. Bei `time_step = 4` stehen sie in
-`report_variables_ZoneTimestep.csv` als Viertelstundenwerte.
-Mittlere Leistung in W = Wh / Intervalldauer in Stunden, bei 15 Minuten also
-Wh × 4. Die vorhandenen Jahres- und flächenbezogenen Exporte enthalten ebenfalls
-die zusätzlichen Spalten.
+1. `add_internal_loads` mit den `manual_vent_sched_*`-Profilen beibehalten.
+2. `inject_manual_ventilation_idf` mit dem gewünschten `air_changes` beibehalten.
+3. Den Schritt `inject_zone_ventilation_idf` entfernen, sofern er dieselben
+   Zonen versorgt. `include_window_ventilation` in `custom_export_params` für
+   einen späteren Excel-Import auf `0` setzen.
+4. `set_meters_idf` nach allen Änderungen an den Lüftungsobjekten ausführen.
+5. Mit `results` die CSV-Dateien erzeugen.
 
-Die bisherigen `Zone Ventilation ...`-Spalten bleiben die Gesamtwerte aller
-ZoneVentilation-Objekte. Die neue manuelle Ausgabe ist ein darin enthaltener
-Anteil und darf nicht nochmals zum Gesamtverlust addiert werden.
+Das Flag in `custom_export_params` allein deaktiviert bei direkter
+OpenStudio-Ausführung keinen vorhandenen Measure-Schritt.
+`Test/regression/base_workflow.osw` enthält ursprünglich beide Lüftungsarten
+und erfüllt die Voraussetzung daher ohne Anpassung nicht.
 
-## Berechnung und Grenzen
+Die `measure_paths` müssen auf den Measures-Ordner von **GenSim-Testing**
+zeigen. Eine neue Simulation ist erforderlich; alte Ergebnisdateien werden
+nicht nachträglich erweitert. Bestehende Lüftungsobjekte werden von der
+Ausgabefunktion weder gelöscht noch verändert.
 
-Die rein lesende EMS-Nachrechnung verwendet je HVAC-Systemzeitschritt:
+## CSV-Spalten
 
-```
-Volumenstrom = Zonenvolumen × Luftwechsel / 3600 × Profilwert
-              × (A + B × abs(T_innen - T_aussen) + C × Windgeschwindigkeit)
-Waermeenergie = Volumenstrom × Aussenluftdichte × cp(Aussenluft)
-                × (T_innen - T_aussen) × Zeitschrittdauer
-```
+In `Normal`, `Debug` und `Reduced` werden bei erfüllten Voraussetzungen ergänzt:
 
-BLAST: A=0.606, B=0.03636, C=0.1177; DOE2: A=0, B=0, C=0.224;
-sonst konstant: A=1, B=0, C=0. Die Nachrechnung übernimmt die Temperatur- und
-Windgrenzen der von dieser Measure erzeugten Lüftungsobjekte. Temperatur und
-Wind werden auf Zonenhöhe gelesen. Negative Luftwechsel werden abgelehnt.
-Ein erneuter Aufruf der Measure im selben Modell wird mit einer Fehlermeldung
-abgebrochen, damit weder Lüftung noch Diagnose doppelt angelegt werden.
+- `METER MANUAL VENTILATION SENSIBLE HEAT LOSS ENERGY[Wh]`
+- `METER MANUAL VENTILATION SENSIBLE HEAT GAIN ENERGY[Wh]`
 
-**Es handelt sich um eine Schätzung, nicht um eine separat ausgelesene interne
-EnergyPlus-Bilanz.** Die am Ende des Systemzeitschritts verfügbare Zonentemperatur
-kann von der Temperatur abweichen, die der Solver vorher für den Luftstrom
-verwendet hat. Besonders bei schnellen Temperaturänderungen und an
-Schaltgrenzen können daher Unterschiede entstehen.
+Die Großschreibung entspricht dem bestehenden GenSim-Export für Zähler.
+Bei `time_step = 4` stehen die Viertelstundenwerte in
+`report_variables_ZoneTimestep.csv`. EnergyPlus liefert Joule, der vorhandene
+Export wandelt in Wh pro Intervall um. Mittlere Leistung in W = Wh geteilt
+durch die Intervalldauer in Stunden, bei 15 Minuten also Wh × 4.
+Die Jahres- und optionalen flächenbezogenen Dateien enthalten die Werte ebenfalls.
 
-Die Berechnung gilt für die unveränderten natürlichen DesignFlowRate-Objekte
-dieser Measure. Spätere Änderungen an deren Parametern, EMS-Luftstromsteuerung,
-HybridVentilation, AirflowNetwork, abweichende lokale Außenluftfeuchte oder eine
-andere Dichtebasis werden nicht nachgeführt. Wie bei den bisherigen summierten
-Zonenvariablen werden keine zusätzlichen Zone-/ZoneGroup-Multiplikatoren
-eingerechnet. Bei solchen Modellen ist die Diagnose nicht als vollständiger
-Gebäudewert zu verwenden.
+Beide Spalten sind positive, getrennte Verlust-/Gewinnsummen. Sie enthalten
+die nativen Zonenwerte; es werden keine zusätzlichen Zone-/ZoneGroup-
+Multiplikatoren durch diese Erweiterung angewendet.
 
-Latente Wärme und ein kausal zusätzlicher Heiz-/Kühlbedarf werden nicht
-berechnet. Wärmespeicherung und Anlagenregelung können den tatsächlichen
-Heizenergiebedarf zeitlich verschieben.
+Die Lüftung bleibt vollständig in der simulierten Wärmebilanz enthalten.
+Die zusätzliche Ausgabe darf **nicht nochmals zum Wärmebedarf addiert werden**.
+Sie beschreibt den sensiblen Wärmeaustausch durch manuelle Lüftung, nicht
+einen separat ermittelten zusätzlichen Heizenergiebedarf. Latente Wärme ist
+nicht Bestandteil dieser beiden Spalten.
 
-Referenzen:
-- [EnergyPlus: Infiltration/Ventilation](https://energyplus.readthedocs.io/en/stable/guides/engineering-reference/8.3-infiltrationventilation.html)
-- [EnergyPlus: EMS Application Guide](https://energyplus.readthedocs.io/en/stable/ems-application-guide/ems-application-guide.html)
+## Prüfstand und Quellen
 
-## Prüfstand
+Ruby-Syntax, JSON und Measure-Metadaten werden geprüft. Keine Builds, Tests oder
+Simulationen ausgeführt; die Integration ist noch nicht durch einen
+EnergyPlus-Simulationslauf validiert.
 
-Keine Builds, neuen Tests oder Simulationen ausgeführt. Die Funktion ist damit
-noch nicht durch einen EnergyPlus-Simulationslauf validiert.
+- [EnergyPlus: Lüftungsausgaben](https://energyplus.readthedocs.io/en/stable/guides/input-output-reference/1.17-group-airflow.html)
+- [EnergyPlus: Custom Meters](https://energyplus.readthedocs.io/en/stable/guides/getting-started/9.2-custom-meters.html)

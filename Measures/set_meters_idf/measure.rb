@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 require_relative '../output_variables'
+require_relative 'resources/manual_ventilation_meters'
 
 # start the measure
 class SetMetersIDF < OpenStudio::Measure::EnergyPlusMeasure
+  include ManualVentilationMeters
   # human readable name
   def name
     return "SetMetersIDF"
@@ -190,8 +192,15 @@ class SetMetersIDF < OpenStudio::Measure::EnergyPlusMeasure
       workspace.removeObject(outputvariable.idfObject.handle)
     end
 
+    manual_zones = manual_ventilation_zones(workspace, runner)
+
     # create the output meters and variables from definitions
     get_output_variables(outputLevel).each do |var_def|
+      if var_def["manual_ventilation_only"]
+        next if manual_zones.empty?
+
+        create_manual_ventilation_meter(workspace, var_def, manual_zones)
+      end
       # normalize node_reference (nil -> "", and strip)
       node_ref = var_def.fetch("node_reference", "").to_s.strip
 

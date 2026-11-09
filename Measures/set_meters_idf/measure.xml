@@ -3,8 +3,8 @@
   <schema_version>3.1</schema_version>
   <name>set_meters_idf</name>
   <uid>f6530b2e-e6e0-4b16-888c-54226d297dd4</uid>
-  <version_id>465377fc-db42-463b-b336-7504effa833b</version_id>
-  <version_modified>2026-09-21T10:41:05Z</version_modified>
+  <version_id>511a0d5a-99b3-4249-add1-52c61bc65953</version_id>
+  <version_modified>20261109T153253Z</version_modified>
   <xml_checksum>15DBE762</xml_checksum>
   <class_name>SetMetersIDF</class_name>
   <display_name>SetMetersIDF</display_name>
@@ -51,8 +51,8 @@
       <default_value>Normal</default_value>
     </argument>
   </arguments>
-  <outputs />
-  <provenances />
+  <outputs/>
+  <provenances/>
   <tags>
     <tag>Envelope.Form</tag>
   </tags>
@@ -81,17 +81,6 @@
       <checksum>07A1DAC9</checksum>
     </file>
     <file>
-      <version>
-        <software_program>OpenStudio</software_program>
-        <identifier>2.5.0</identifier>
-        <min_compatible>2.5.0</min_compatible>
-      </version>
-      <filename>measure.rb</filename>
-      <filetype>rb</filetype>
-      <usage_type>script</usage_type>
-      <checksum>617AE0B8</checksum>
-    </file>
-    <file>
       <filename>example_model.idf</filename>
       <filetype>idf</filetype>
       <usage_type>test</usage_type>
@@ -102,6 +91,23 @@
       <filetype>rb</filetype>
       <usage_type>test</usage_type>
       <checksum>DD1BADF0</checksum>
+    </file>
+    <file>
+      <version>
+        <software_program>OpenStudio</software_program>
+        <identifier>2.5.0</identifier>
+        <min_compatible>2.5.0</min_compatible>
+      </version>
+      <filename>measure.rb</filename>
+      <filetype>rb</filetype>
+      <usage_type>script</usage_type>
+      <checksum>8D84896B</checksum>
+    </file>
+    <file>
+      <filename>manual_ventilation_meters.rb</filename>
+      <filetype>rb</filetype>
+      <usage_type>resource</usage_type>
+      <checksum>ED1A6635</checksum>
     </file>
   </files>
 </measure>
