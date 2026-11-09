@@ -1,5 +1,23 @@
 [
   {
+    "name": "Manual Ventilation Estimated Sensible Heat Loss Energy",
+    "eplus_variables": ["Manual Ventilation Estimated Sensible Heat Loss Energy"],
+    "node_reference": "",
+    "create_output_variable": true,
+    "create_custom_meter": false,
+    "create_output_meter": false,
+    "output_levels": ["Debug", "Normal", "Reduced"]
+  },
+  {
+    "name": "Manual Ventilation Estimated Sensible Heat Gain Energy",
+    "eplus_variables": ["Manual Ventilation Estimated Sensible Heat Gain Energy"],
+    "node_reference": "",
+    "create_output_variable": true,
+    "create_custom_meter": false,
+    "create_output_meter": false,
+    "output_levels": ["Debug", "Normal", "Reduced"]
+  },
+  {
     "name": "Baseboard Total Heating Energy",
     "eplus_variables": ["Baseboard Total Heating Energy"],
     "node_reference": "",

@@ -1,4 +1,8 @@
 # GenSim
+Dieser Fork **GenSim-Testing** ergänzt einen geschätzten separaten Lastgang der
+manuellen Fensterlüftung. [Verwendung, CSV-Spalten und Grenzen](docs/manual_ventilation_output.md).
+Die Erweiterung ist noch nicht durch einen Simulationslauf validiert.
+
 [![Measure Tests](https://github.com/QuaSi-Software/GenSim/actions/workflows/measure-tests.yml/badge.svg)](https://github.com/QuaSi-Software/GenSim/actions/workflows/measure-tests.yml)
 
 ![GenSim](docs/logo_gensim.jpg "GenSim")

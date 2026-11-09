@@ -3,13 +3,13 @@
   <schema_version>3.1</schema_version>
   <name>inject_manual_ventilation_idf</name>
   <uid>3bdd4f5d-02e7-43ad-b151-9f781ef887b3</uid>
-  <version_id>85a9f2c7-6ec4-4aca-8b22-a9be95a4e70b</version_id>
-  <version_modified>2026-05-06T07:42:57Z</version_modified>
+  <version_id>1d4f8c19-5032-4596-a778-e7a6ef48e79b</version_id>
+  <version_modified>20261109T151235Z</version_modified>
   <xml_checksum>0B6DEAE1</xml_checksum>
   <class_name>InjectManualVentilationIDF</class_name>
   <display_name>InjectManualVentilationIDF</display_name>
-  <description>Inject manual window ventilation.</description>
-  <modeler_description>Inject manual window ventilation.</modeler_description>
+  <description>Inject manual window ventilation and report its estimated sensible heat loss and gain.</description>
+  <modeler_description>Adds passive EMS diagnostics using the manual schedule, zone volume, local weather and BLAST/DOE2 coefficients. Reports estimated sensible heat loss and gain without changing the simulated ventilation.</modeler_description>
   <arguments>
     <argument>
       <name>air_changes</name>
@@ -18,9 +18,17 @@
       <required>true</required>
       <model_dependent>false</model_dependent>
     </argument>
+    <argument>
+      <name>infiltration_type</name>
+      <display_name>infiltration_type</display_name>
+      <type>String</type>
+      <required>false</required>
+      <model_dependent>false</model_dependent>
+      <default_value>BLAST</default_value>
+    </argument>
   </arguments>
-  <outputs />
-  <provenances />
+  <outputs/>
+  <provenances/>
   <tags>
     <tag>Envelope.Form</tag>
   </tags>
@@ -57,7 +65,25 @@
       <filename>measure.rb</filename>
       <filetype>rb</filetype>
       <usage_type>script</usage_type>
-      <checksum>9CB1DEDD</checksum>
+      <checksum>A2E690EC</checksum>
+    </file>
+    <file>
+      <filename>example_model.idf</filename>
+      <filetype>idf</filetype>
+      <usage_type>test</usage_type>
+      <checksum>533DFCEC</checksum>
+    </file>
+    <file>
+      <filename>inject_manual_ventilation_idf_test.rb</filename>
+      <filetype>rb</filetype>
+      <usage_type>test</usage_type>
+      <checksum>D09D7A59</checksum>
+    </file>
+    <file>
+      <filename>manual_ventilation_output.rb</filename>
+      <filetype>rb</filetype>
+      <usage_type>resource</usage_type>
+      <checksum>EFCF3C4C</checksum>
     </file>
   </files>
 </measure>
